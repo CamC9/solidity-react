@@ -1,12 +1,14 @@
 import * as React from "react";
-import { ethers, utils } from "ethers";
+import { ethers} from "ethers";
 import './App.css';
 import abiFile from "./utils/EmojiPortal.json"
+import Emoji from "a11y-react-emoji"
 
 export default function App() {
 	const [currAccount, setCurrentAccount] = React.useState("")
-	const contractAddress = "0x865Bf0626fB0c68382F5aED9b11A65BFe8A42220"
+	const contractAddress = "0x5dfDD615CA4EdDcF0bBB8e94eae34E25181605E0"
 	const contractABI = abiFile.abi
+    const [currentMessage, setCurrentMessage] = React.useState('')
 
 	const checkIfWalletIsConnected = () => {
 		
@@ -26,9 +28,10 @@ export default function App() {
 			if(accounts.length !== 0) {
 				const account = accounts[0];
 				console.log("Found an authorized account: ", account)
-
+                
 				// Store the user's public wallet address for later
 				setCurrentAccount(account);
+                getAllSentEmojis()
 			} else {
 				console.log("No authorized account found")
 			}
@@ -49,7 +52,7 @@ export default function App() {
 		.catch(err => console.log(err));
 	}
 
-	const sendEmoji = async () => {
+	const sendEmoji = async (color) => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		const signer = provider.getSigner()
 		const emojiportalContract = new ethers.Contract(contractAddress, contractABI, signer);
@@ -57,7 +60,7 @@ export default function App() {
 		let totalCount = await emojiportalContract.getTotalEmojis()
 		console.log("Retreived total emoji count...", totalCount.toNumber())
 
-		const emojiTxn = await emojiportalContract.sendEmoji("this is a message")
+		const emojiTxn = await emojiportalContract.sendEmoji(currentMessage, color)
 		console.log("Mining...", emojiTxn.hash)
 		await emojiTxn.wait()
 		console.log("Mined! -- ", emojiTxn.hash)
@@ -67,7 +70,7 @@ export default function App() {
 	}
 
 	const [allEmojis, setAllEmojis] = React.useState([])
-	async function getAllSentEmojis() {
+	const getAllSentEmojis = async () => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		const signer = provider.getSigner()
 		const emojiportalContract = new ethers.Contract(contractAddress, contractABI, signer);
@@ -79,7 +82,8 @@ export default function App() {
 			emojisCleaned.push({
 				address: emoji.address,
 				timestamp: new Date(emoji.timestamp * 1000),
-				message: emoji.message
+				message: emoji.message,
+                color: emoji.color
 			})
 		})
 
@@ -92,36 +96,36 @@ export default function App() {
   
   return (
     <div className="mainContainer">
-      <div className="dataContainer">
-        <div className="header">
-        😎 Hey there!
+        <div className="dataContainer">
+            <div className="header"> <Emoji symbol="😎"/> Hey there! </div>
+            <div className="bio"> Connect your Ethereum wallet and send color-coded messages! </div>
+
+            {currAccount ? null : (
+                <button className="emojiButton" onClick={connectWallet}> Connect Wallet </button>
+            )}
+
+            <button className="emojiButton" onClick={a => sendEmoji("red")}> 🟥 </button>
+            <button className="emojiButton" onClick={a => sendEmoji("orange")}> 🟧 </button>
+            <button className="emojiButton" onClick={a => sendEmoji("yellow")}> 🟨 </button>
+            <button className="emojiButton" onClick={a => sendEmoji("green")}> 🟩 </button>
+            <button className="emojiButton" onClick={a => sendEmoji("blue")}> 🟦 </button>
+            <button className="emojiButton" onClick={a => sendEmoji("purple")}> 🟪 </button>
+
+            <div>
+                <label>Enter Message: </label>
+                <input value={currentMessage} onChange={e => setCurrentMessage(e.target.value)} />
+            </div>
+
+            {allEmojis.map((emoji, index) => {
+                return (
+                    <div style={{backgroundColor: emoji.color, marginTop: "16px", padding: "8px"}}>
+                        <div>Address: {emoji.address}</div>
+                        <div>Time: {emoji.timestamp.toString()}</div>
+                        <div>Message: {emoji.message}</div>
+                    </div>
+                )
+            })}
         </div>
-
-        <div className="bio">
-        Connect your Ethereum wallet and send emojis!
-        </div>
-
-				{currAccount ? null : (
-					<button className="emojiButton" onClick={connectWallet}> Connect Wallet </button>
-				)}
-
-        <button className="emojiButton" onClick={sendEmoji}> 🟥 </button>
-				<button className="emojiButton" onClick={sendEmoji}> 🟧 </button>
-				<button className="emojiButton" onClick={sendEmoji}> 🟨 </button>
-				<button className="emojiButton" onClick={sendEmoji}> 🟩 </button>
-				<button className="emojiButton" onClick={sendEmoji}> 🟦 </button>
-				<button className="emojiButton" onClick={sendEmoji}> 🟪 </button>
-
-				{allEmojis.map((emoji, index) => {
-					return (
-						<div style={{backgroundColor: "OldLace", marginTop: "16px", padding: "8px"}}>
-							<div>Address: {emoji.address}</div>
-							<div>Time: {emoji.timestamp.toString()}</div>
-							<div>Message: {emoji.message}</div>
-						</div>
-					)
-				})}
-      </div>
     </div>
   );
 }
