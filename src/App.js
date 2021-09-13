@@ -1,11 +1,11 @@
 import * as React from "react";
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 import './App.css';
 import abiFile from "./utils/EmojiPortal.json"
 
 export default function App() {
 	const [currAccount, setCurrentAccount] = React.useState("")
-	const contractAddress = "0x6363f437a043B95BEba4d0Ca680927640BeaFF31"
+	const contractAddress = "0x865Bf0626fB0c68382F5aED9b11A65BFe8A42220"
 	const contractABI = abiFile.abi
 
 	const checkIfWalletIsConnected = () => {
