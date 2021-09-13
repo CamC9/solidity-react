@@ -5,7 +5,8 @@
 /.pnp
 .pnp.js
 
-/src/utils
+./src/utils/EmojiPortal.json
+
 # testing
 /coverage
 
